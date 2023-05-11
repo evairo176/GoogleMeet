@@ -119,6 +119,7 @@ var AppProcess = (function () {
     }
   }
   async function videoProcess(newVideoState) {
+    console.log(newVideoState);
     if (newVideoState == video_states.None) {
       $("#videoCamOnOff").html(
         "<span class='material-icons' style='width:100%;'>videocam_off</span>"
@@ -172,8 +173,10 @@ var AppProcess = (function () {
       }
       if (vstream && vstream.getVideoTracks().length > 0) {
         videoCamTrack = vstream.getVideoTracks()[0];
+        console.log(videoCamTrack);
         if (videoCamTrack) {
           local_div.srcObject = new MediaStream([videoCamTrack]);
+          console.log(local_div.srcObject);
           updateMediaSenders(videoCamTrack, rtp_vid_senders);
         }
       }

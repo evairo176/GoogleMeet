@@ -1,38 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Meet</title>
-    <link rel="stylesheet" href="public/Assets/css/bootstrap.min.css" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-    />
-    <link rel="stylesheet" href="public//Assets/css/style.css" />
+    <link rel="stylesheet" href="public/Assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="public/Assets/css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
     <script src="public/Assets/js/jquery-3.4.1.min.js"></script>
     <script src="public/Assets/js/app.js"></script>
     <script>
-      $(function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        var meeting_id = urlParams.get("meetingID");
-        var user_id = window.prompt("Enter your username");
+        $(function(){
+            const urlParams = new URLSearchParams(window.location.search);
+            var meeting_id = urlParams.get('meetingID');
+            var user_id = window.prompt('Enter your userid');
 
-        if (!user_id || !meeting_id) {
-          alert("User id or Meeting id missing");
-          window.location.href = "/action.html";
-          return;
-        }
+            if(!user_id || !meeting_id){
+                alert('User id or meeting id missing');
+                window.location.href = '/action.html';
+                return;
+            }
+            $("#meetingContainer").show();
 
-        $("#meetingContainer").show();
-
-        MyApp._init(user_id, meeting_id);
-      });
+            MyApp._init(user_id,meeting_id);
+        })
     </script>
-  </head>
-  <body>
+</head>
+<body>
     <main class=" d-flex flex-column home-wrap">
         <div class="g-top text-light">
             <div class="top-remote-video-show-wrap d-flex">
@@ -46,7 +42,7 @@
                             <img class="handRaise" src="/public/Assets/images/handRaise.png" style="position: absolute;height: 30px;top:8%; left: 3%;display: none;"/>
 
                          <!-- .....................HandRaise .................-->   
-                            <video autoplay muted id="localVideoPlayer"></video>
+                            <video autoplay muted id="locaVideoPlayer"></video>
                         </div>
                     </div>
                     <div id="otherTemplate" class="userbox display-center flex-column" style="display:none">
@@ -216,5 +212,5 @@
             
         </div>
     </main>
-  </body>
+</body>
 </html>

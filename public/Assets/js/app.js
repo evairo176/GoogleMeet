@@ -20,12 +20,13 @@ var AppProcess = (function () {
   var audio;
   var isAudioMute = true;
   var rtp_aud_senders = [];
+  var rtp_vid_senders = [];
   var video_states = {
     None: 0,
     Camera: 1,
     ScreenShare: 2,
   };
-  var video_st = video_states.none;
+  var video_st = video_states.None;
   var videoCamTrack;
 
   async function _init(SDP_function, my_connid) {
@@ -58,16 +59,16 @@ var AppProcess = (function () {
       isAudioMute = !isAudioMute;
     });
 
-    $("#videoCamOnOf").on("click", async function () {
-      if (video_st == video_st.Camera) {
+    $("#videoCamOnOff").on("click", async function () {
+      if (video_st == video_states.Camera) {
         await videoProcess(video_states.None);
       } else {
         await videoProcess(video_states.Camera);
       }
     });
 
-    $("#btnScreenShareOnOf").on("click", async function () {
-      if (video_st == video_st.ScreenShare) {
+    $("#ScreenShareOnOff").on("click", async function () {
+      if (video_st == video_states.ScreenShare) {
         await videoProcess(video_states.None);
       } else {
         await videoProcess(video_states.ScreenShare);
@@ -75,7 +76,33 @@ var AppProcess = (function () {
     });
   }
 
+  async function connection_status(connection) {
+    if (
+      connection &&
+      (connection.connectionState == "new" ||
+        connection.connectionState == "connecting" ||
+        connection.connectionState == "connected")
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  async function updateMediaSenders(track, rtp_senders) {
+    for (var con_id in peers_connection_ids) {
+      if (connection_status(peers_connection[con_id])) {
+        if (rtp_senders[con_id] && rtp_senders[con_id].track) {
+          rtp_senders[con_id].replaceTrack(track);
+        } else {
+          rtp_senders[con_id] = peers_connection[con_id].addTrack(track);
+        }
+      }
+    }
+  }
+
   async function videoProcess(newVideoState) {
+    // console.log(newVideoState);
     try {
       var vstream = null;
       if (newVideoState == video_states.Camera) {
@@ -94,12 +121,20 @@ var AppProcess = (function () {
           },
           audio: false,
         });
+        // vstream.oninactive = (e) => {
+        //   removeVideoStream(rtp_vid_senders);
+        //   $("#ScreenShareOnOf").html(
+        //     '<span class="material-icons ">present_to_all</span><div >Present Now</div>'
+        //   );
+        // };
       }
-
       if (vstream && vstream.getVideoTracks().length > 0) {
+        // vstream
         videoCamTrack = vstream.getVideoTracks()[0];
+        console.log(videoCamTrack);
         if (videoCamTrack) {
           local_div.srcObject = new MediaStream([videoCamTrack]);
+          updateMediaSenders(videoCamTrack, rtp_vid_senders);
         }
       }
     } catch (e) {
@@ -110,7 +145,7 @@ var AppProcess = (function () {
     video_st = newVideoState;
   }
 
-  async function setConnection() {
+  async function setConnection(connId) {
     var connection = new RTCPeerConnection(iceConfiguration);
 
     connection.onnegotiationneeded = async function () {
@@ -162,6 +197,15 @@ var AppProcess = (function () {
 
     peers_connection_ids[connId] = connId;
     peers_connection[connId] = connection;
+
+    if (
+      video_st == video_states.Camera ||
+      video_st == video_states.ScreenShare
+    ) {
+      if (videoCamTrack) {
+        updateMediaSenders(videoCamTrack, rtp_vid_senders);
+      }
+    }
 
     return connection;
   }
@@ -231,7 +275,9 @@ var MyApp = (function () {
   function checkId(uid, mid) {
     user_id = uid;
     meeting_id = mid;
-
+    $("#meetingContainer").show();
+    $("#me h2").text(user_id + "(Me)");
+    document.title = user_id;
     event_process_for_signaling_server(user_id);
   }
 
@@ -261,7 +307,6 @@ var MyApp = (function () {
     socket.on("inform_others_about_me", (data) => {
       addUser(data.other_user_id, data.connId);
       AppProcess.setConnection(data.connId);
-      console.log(data);
     });
 
     socket.on("inform_me_about_others_user", (others_user) => {
@@ -269,7 +314,6 @@ var MyApp = (function () {
         for (var i = 0; i < others_user.length; i++) {
           addUser(others_user[i].user_id, others_user[i].connectionId);
           AppProcess.setConnection(others_user[i].connectionId);
-          console.log(data);
         }
       }
     });
