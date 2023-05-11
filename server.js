@@ -11,30 +11,31 @@ const io = require("socket.io")(server, {
 });
 
 app.use(express.static(path.join(__dirname, "")));
+
 var userConnections = [];
 io.on("connection", (socket) => {
-  console.log("Socket id is" + socket.id);
-  socket.on("userConnect", (data) => {
-    console.log(data);
+  console.log("socket id is ", socket.id);
+  socket.on("userconnect", (data) => {
+    console.log("userconnent", data.displayName, data.meetingid);
     var other_users = userConnections.filter(
-      (value) => value.meeting_id == data.meeting_id
+      (p) => p.meeting_id == data.meetingid
     );
     userConnections.push({
       connectionId: socket.id,
       user_id: data.displayName,
-      meeting_id: data.meeting_id,
+      meeting_id: data.meetingid,
     });
-
-    other_users.forEach((value) => {
-      socket.to(value.connectionId).emit("inform_others_about_me", {
+    var userCount = userConnections.length;
+    console.log(userCount);
+    other_users.forEach((v) => {
+      socket.to(v.connectionId).emit("inform_others_about_me", {
         other_user_id: data.displayName,
         connId: socket.id,
+        userNumber: userCount,
       });
     });
-
-    socket.emit("inform_me_about_others_user", other_users);
+    socket.emit("inform_me_about_other_user", other_users);
   });
-
   socket.on("SDPProcess", (data) => {
     socket.to(data.to_connid).emit("SDPProcess", {
       message: data.message,
